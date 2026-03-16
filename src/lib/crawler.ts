@@ -69,7 +69,7 @@ export async function crawlPage(url: string, timeout = 30_000): Promise<PageSnap
   });
 
   const dataLayer = await page.evaluate(() =>
-    (window as Record<string, unknown>).dataLayer ?? []
+    (window as unknown as Record<string, unknown>).dataLayer ?? []
   ) as unknown[];
 
   await browser.close();

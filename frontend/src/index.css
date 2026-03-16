@@ -1,0 +1,27 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #07070F;
+  --surface: #0D0D1A;
+  --elevated: #13132B;
+  --border: rgba(255,255,255,0.07);
+  --primary: #6C63FF;
+  --primary-dim: rgba(108,99,255,0.15);
+  --secondary: #00D4AA;
+  --text: #E8E8F0;
+  --muted: #7070A0;
+  --red: #EF4444;
+  --amber: #F59E0B;
+  --blue: #3B82F6;
+  --green: #10B981;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
