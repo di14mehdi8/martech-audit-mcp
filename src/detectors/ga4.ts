@@ -34,6 +34,22 @@ export class Ga4Detector implements Detector {
       });
     }
 
+    // GA4 fired via GTM — network request to google-analytics.com/g/collect
+    const ga4Network = snapshot.networkRequests.find(
+      (r) => r.url.includes("google-analytics.com/g/collect") || r.url.includes("analytics.google.com/g/collect")
+    );
+    if (ga4Network && !found.length) {
+      const mid = ga4Network.url.match(/[?&]tid=(G-[A-Z0-9]+)/);
+      found.push({
+        name: "Google Analytics 4",
+        category: "analytics",
+        confidence: "high",
+        method: "network_request",
+        evidence: ga4Network.url.split("?")[0],
+        config: mid ? { measurementId: mid[1] } : undefined,
+      });
+    }
+
     const gaCookie = snapshot.cookies.find((c) => c.name === "_ga");
     if (gaCookie && !found.length) {
       found.push({

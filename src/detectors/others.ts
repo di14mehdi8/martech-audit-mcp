@@ -43,10 +43,17 @@ const TOOL_PATTERNS: ToolPattern[] = [
   { name: "Optimizely", category: "a_b_testing", scriptPatterns: ["cdn.optimizely.com/js"] },
   { name: "VWO", category: "a_b_testing", scriptPatterns: ["dev.visualwebsiteoptimizer.com"] },
   { name: "AB Tasty", category: "a_b_testing", scriptPatterns: ["try.abtasty.com"] },
-  // Consent
-  { name: "OneTrust", category: "consent", scriptPatterns: ["cdn.cookielaw.org/scripttemplates/otSDKStub.js"] },
-  { name: "Cookiebot", category: "consent", scriptPatterns: ["consent.cookiebot.com"] },
+  // Consent — named platforms
+  { name: "OneTrust", category: "consent", scriptPatterns: ["cdn.cookielaw.org/scripttemplates/otSDKStub.js"], cookiePatterns: ["OptanonConsent"] },
+  { name: "Cookiebot", category: "consent", scriptPatterns: ["consent.cookiebot.com"], cookiePatterns: ["CookieConsent"] },
   { name: "Osano", category: "consent", scriptPatterns: ["cmp.osano.com"] },
+  { name: "CookieYes", category: "consent", scriptPatterns: ["cdn-cookieyes.com", "cookieyes.com/cookie-consent.js"], cookiePatterns: ["cookieyes-consent"] },
+  { name: "TrustArc", category: "consent", scriptPatterns: ["consent.trustarc.com", "trustarc.com/notice"] },
+  { name: "Termly", category: "consent", scriptPatterns: ["app.termly.io/embed-policy"] },
+  { name: "Iubenda", category: "consent", scriptPatterns: ["cdn.iubenda.com/cs/iubenda_cs.js"], cookiePatterns: ["_iub_cs"] },
+  { name: "Usercentrics", category: "consent", scriptPatterns: ["app.usercentrics.eu/browser-ui/latest/bundle.js"] },
+  { name: "Didomi", category: "consent", scriptPatterns: ["sdk.privacy-center.org"], inlinePatterns: ["Didomi.initialize"] },
+  { name: "Consent Manager", category: "consent", scriptPatterns: ["consent-manager.io"] },
 ];
 
 export class GenericToolDetector implements Detector {

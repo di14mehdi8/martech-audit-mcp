@@ -76,6 +76,10 @@ app.post("/api/audit", async (req, res) => {
 
     if (message.includes("timeout") || message.includes("Timeout")) {
       res.status(504).json({ error: "Page took too long to load", code: "TIMEOUT" });
+    } else if (message.includes("net::ERR_") || message.includes("NS_ERROR")) {
+      res.status(422).json({ error: "Could not reach the page — check the URL is publicly accessible", code: "UNREACHABLE" });
+    } else if (message.includes("403") || message.includes("blocked") || message.includes("Cloudflare") || message.includes("Access Denied")) {
+      res.status(422).json({ error: "The site is blocking automated access (bot protection). Try a different URL.", code: "BOT_BLOCKED" });
     } else {
       res.status(500).json({ error: "Failed to crawl the page", code: "CRAWL_FAILED", detail: message });
     }

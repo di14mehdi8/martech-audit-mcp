@@ -5,6 +5,7 @@ import { Ga4Detector } from "./ga4.js";
 import { HubSpotDetector } from "./hubspot.js";
 import { SegmentDetector } from "./segment.js";
 import { GenericToolDetector } from "./others.js";
+import { CustomConsentDetector } from "./consent.js";
 
 const DETECTORS = [
   new GtmDetector(),
@@ -12,6 +13,7 @@ const DETECTORS = [
   new HubSpotDetector(),
   new SegmentDetector(),
   new GenericToolDetector(),
+  new CustomConsentDetector(),
 ];
 
 export function runAllDetectors(snapshot: PageSnapshot): DetectedTool[] {
