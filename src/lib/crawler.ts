@@ -24,8 +24,18 @@ export interface PageSnapshot {
 }
 
 export async function crawlPage(url: string, timeout = 30_000): Promise<PageSnapshot> {
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
+  const browser = await chromium.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+  });
+  const context = await browser.newContext({
+    userAgent:
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    viewport: { width: 1280, height: 800 },
+    extraHTTPHeaders: {
+      "Accept-Language": "en-US,en;q=0.9",
+    },
+  });
   const page = await context.newPage();
 
   const networkRequests: NetworkRequest[] = [];
@@ -35,7 +45,9 @@ export async function crawlPage(url: string, timeout = 30_000): Promise<PageSnap
     networkRequests.push({ url: req.url(), resourceType: req.resourceType() });
   });
 
-  await page.goto(url, { waitUntil: "networkidle", timeout });
+  await page.goto(url, { waitUntil: "domcontentloaded", timeout });
+  // Give scripts a moment to initialise after DOM is ready
+  await page.waitForTimeout(2500);
 
   const html = await page.content();
   const finalUrl = page.url();
