@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/playwright:v1.51.0-noble
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci && npx playwright install chromium
 
 COPY . .
 RUN npm run build:all
