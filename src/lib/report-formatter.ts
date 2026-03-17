@@ -1,6 +1,5 @@
 import type { DetectedTool, ToolCategory } from "../detectors/types.js";
 
-export type ScoreLabel = "Well-Instrumented" | "Functional with Gaps" | "Needs Attention" | "Critical Gaps";
 export type Severity = "critical" | "warning" | "info";
 
 export interface ToolChip {
@@ -8,6 +7,12 @@ export interface ToolChip {
   confidence: "high" | "medium" | "low";
   method: string;
   config?: Record<string, unknown>;
+}
+
+export interface ToolEvidence extends ToolChip {
+  category: ToolCategory;
+  evidence: string;
+  version?: string;
 }
 
 export interface CategoryReport {
@@ -37,17 +42,34 @@ export interface RawSignals {
   has_data_layer: boolean;
 }
 
+export interface LlmSummary {
+  summary: string;
+  key_observations: Array<{ text: string; evidence: string[] }>;
+  risk_flags: Array<{ severity: Severity; text: string; evidence: string[] }>;
+  limitations: string[];
+}
+
+export interface LlmStatus {
+  status: "disabled" | "ok" | "invalid" | "error";
+  model?: string;
+  error?: string;
+}
+
+export interface LlmReport {
+  status: LlmStatus;
+  summary?: LlmSummary;
+}
+
 export interface AuditReport {
   url: string;
   audited_at: string;
   elapsed_ms: number;
-  stack_score: number;
-  score_label: ScoreLabel;
-  score_rationale: string;
   categories: CategoryReport[];
+  evidence: ToolEvidence[];
   raw_signals: RawSignals;
   findings: Finding[];
   recommendations: Recommendation[];
+  llm?: LlmReport;
 }
 
 const CATEGORY_LABELS: Record<ToolCategory, string> = {
@@ -75,17 +97,23 @@ export function formatReport(
 ): AuditReport {
   const categories = buildCategories(tools);
   const findings = generateFindings(tools);
-  const { score, label, rationale } = calculateScore(tools, findings);
   const recommendations = generateRecommendations(findings, tools);
+  const evidence = tools.map((tool) => ({
+    name: tool.name,
+    category: tool.category,
+    confidence: tool.confidence,
+    method: tool.method,
+    evidence: tool.evidence,
+    version: tool.version,
+    config: tool.config,
+  }));
 
   return {
     url,
     audited_at: new Date().toISOString(),
     elapsed_ms,
-    stack_score: score,
-    score_label: label,
-    score_rationale: rationale,
     categories,
+    evidence,
     raw_signals: rawSignals,
     findings,
     recommendations,
@@ -185,42 +213,6 @@ function generateFindings(tools: DetectedTool[]): Finding[] {
   }
 
   return findings;
-}
-
-function calculateScore(
-  tools: DetectedTool[],
-  findings: Finding[]
-): { score: number; label: ScoreLabel; rationale: string } {
-  const coveredCore = CORE_CATEGORIES.filter((c) => tools.some((t) => t.category === c)).length;
-  const coverageScore = (coveredCore / CORE_CATEGORIES.length) * 40;
-
-  const highConfidence = tools.filter((t) => t.confidence === "high").length;
-  const signalScore = tools.length > 0 ? (highConfidence / tools.length) * 35 : 0;
-
-  const criticals = findings.filter((f) => f.severity === "critical").length;
-  const warnings = findings.filter((f) => f.severity === "warning").length;
-  const hygieneScore = Math.max(0, 25 - criticals * 10 - warnings * 4);
-
-  const score = Math.round(coverageScore + signalScore + hygieneScore);
-
-  let label: ScoreLabel;
-  let rationale: string;
-
-  if (score >= 80) {
-    label = "Well-Instrumented";
-    rationale = "Core tracking categories are covered with high-confidence signals and no critical gaps.";
-  } else if (score >= 60) {
-    label = "Functional with Gaps";
-    rationale = "Basic tracking is in place but key categories or signal quality issues need attention.";
-  } else if (score >= 40) {
-    label = "Needs Attention";
-    rationale = "Significant gaps in tracking coverage or data quality are impacting marketing visibility.";
-  } else {
-    label = "Critical Gaps";
-    rationale = "Critical tracking failures detected — marketing decisions are likely based on incomplete data.";
-  }
-
-  return { score, label, rationale };
 }
 
 function generateRecommendations(findings: Finding[], tools: DetectedTool[]): Recommendation[] {

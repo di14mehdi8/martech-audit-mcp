@@ -1,5 +1,4 @@
 import type { AuditReport } from "../types";
-import ScoreGauge from "./ScoreGauge";
 import CategoryGrid from "./CategoryGrid";
 import FindingsPanel from "./FindingsPanel";
 import RecommendationsPanel from "./RecommendationsPanel";
@@ -23,7 +22,6 @@ export default function ReportView({ report }: { report: AuditReport }) {
           <p style={{ color: "var(--muted)", fontSize: 13 }}>{report.url}</p>
           <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 6 }}>Audited {date} · {(report.elapsed_ms / 1000).toFixed(1)}s</p>
         </div>
-        <ScoreGauge score={report.stack_score} label={report.score_label} rationale={report.score_rationale} />
       </div>
 
       {/* Categories */}
@@ -45,6 +43,78 @@ export default function ReportView({ report }: { report: AuditReport }) {
         <div style={card}>
           <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Recommendations</h3>
           <RecommendationsPanel recommendations={report.recommendations} />
+        </div>
+      )}
+
+      {/* Evidence */}
+      {report.evidence.length > 0 && (
+        <div style={card}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Evidence</h3>
+          <div style={{ display: "grid", gap: 12 }}>
+            {report.evidence.map((item) => (
+              <div key={`${item.name}-${item.method}-${item.evidence}`} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", background: "var(--elevated)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600 }}>{item.name}</p>
+                    <p style={{ fontSize: 11, color: "var(--muted)" }}>{item.category} · {item.method} · {item.confidence} confidence</p>
+                  </div>
+                  {item.version && (
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>v{item.version}</span>
+                  )}
+                </div>
+                <div style={{ marginTop: 8, fontSize: 12, color: "var(--muted)", wordBreak: "break-all" }}>
+                  {item.evidence}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* LLM Summary */}
+      {report.llm?.summary && (
+        <div style={card}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>LLM Summary (Evidence-Grounded)</h3>
+          <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 12 }}>{report.llm.summary.summary}</p>
+
+          {report.llm.summary.key_observations.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Key observations</p>
+              <div style={{ display: "grid", gap: 8 }}>
+                {report.llm.summary.key_observations.map((obs, idx) => (
+                  <div key={`${obs.text}-${idx}`} style={{ fontSize: 12, color: "var(--muted)" }}>
+                    {obs.text}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {report.llm.summary.risk_flags.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Risk flags</p>
+              <div style={{ display: "grid", gap: 8 }}>
+                {report.llm.summary.risk_flags.map((flag, idx) => (
+                  <div key={`${flag.text}-${idx}`} style={{ fontSize: 12, color: "var(--muted)" }}>
+                    [{flag.severity}] {flag.text}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {report.llm.summary.limitations.length > 0 && (
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Limitations</p>
+              <div style={{ display: "grid", gap: 6 }}>
+                {report.llm.summary.limitations.map((lim, idx) => (
+                  <div key={`${lim}-${idx}`} style={{ fontSize: 12, color: "var(--muted)" }}>
+                    {lim}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

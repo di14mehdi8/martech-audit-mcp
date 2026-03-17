@@ -1,4 +1,3 @@
-export type ScoreLabel = "Well-Instrumented" | "Functional with Gaps" | "Needs Attention" | "Critical Gaps";
 export type Severity = "critical" | "warning" | "info";
 
 export interface ToolChip {
@@ -6,6 +5,12 @@ export interface ToolChip {
   confidence: "high" | "medium" | "low";
   method: string;
   config?: Record<string, unknown>;
+}
+
+export interface ToolEvidence extends ToolChip {
+  category: string;
+  evidence: string;
+  version?: string;
 }
 
 export interface CategoryReport {
@@ -35,15 +40,26 @@ export interface RawSignals {
   has_data_layer: boolean;
 }
 
+export interface LlmSummary {
+  summary: string;
+  key_observations: Array<{ text: string; evidence: string[] }>;
+  risk_flags: Array<{ severity: Severity; text: string; evidence: string[] }>;
+  limitations: string[];
+}
+
+export interface LlmReport {
+  status: { status: "disabled" | "ok" | "invalid" | "error"; model?: string; error?: string };
+  summary?: LlmSummary;
+}
+
 export interface AuditReport {
   url: string;
   audited_at: string;
   elapsed_ms: number;
-  stack_score: number;
-  score_label: ScoreLabel;
-  score_rationale: string;
   categories: CategoryReport[];
+  evidence: ToolEvidence[];
   raw_signals: RawSignals;
   findings: Finding[];
   recommendations: Recommendation[];
+  llm?: LlmReport;
 }

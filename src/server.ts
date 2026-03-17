@@ -8,6 +8,7 @@ import { existsSync } from "node:fs";
 import { crawlPage } from "./lib/crawler.js";
 import { runAllDetectors } from "./detectors/index.js";
 import { formatReport } from "./lib/report-formatter.js";
+import { attachLlmReport, generateGeminiSummary } from "./lib/gemini.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT ?? 3001;
@@ -62,13 +63,23 @@ app.post("/api/audit", async (req, res) => {
     const snapshot = await crawlPage(parsedUrl.toString(), timeout);
     const tools = runAllDetectors(snapshot);
 
-    const report = formatReport(parsedUrl.toString(), tools, {
+    const reportBase = formatReport(parsedUrl.toString(), tools, {
       total_scripts: snapshot.scripts.length,
       total_network_requests: snapshot.networkRequests.length,
       total_cookies: snapshot.cookies.length,
       has_data_layer: snapshot.dataLayer.length > 0,
     }, snapshot.elapsed_ms);
 
+    const llm = await generateGeminiSummary({
+      tools,
+      findings: reportBase.findings,
+      recommendations: reportBase.recommendations,
+      rawSignals: reportBase.raw_signals,
+      url: reportBase.url,
+      auditedAt: reportBase.audited_at,
+    });
+
+    const report = attachLlmReport(reportBase, llm);
     res.json(report);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
